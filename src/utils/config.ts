@@ -18,6 +18,9 @@
  * `.env` is gitignored and EAS builds from git, so a cloud build never sees it.
  * That is why the two shipping profiles name the URL in `eas.json` instead:
  * committed, reviewable, and the same for everyone who runs the build.
+ *
+ * This is the API only. Images are absolute URLs the API returns, served from
+ * the CDN in front of its S3 bucket, so nothing here rewrites them.
  */
 
 const configured = process.env.EXPO_PUBLIC_API_URL;
@@ -38,6 +41,3 @@ if (!__DEV__ && (!configured || isLocal(configured))) {
 }
 
 export const API_BASE_URL = configured ?? 'http://localhost:3000/api';
-
-// Static uploads are served from the API host's root, not under /api.
-export const API_ORIGIN = API_BASE_URL.replace(/\/api\/?$/, '');
