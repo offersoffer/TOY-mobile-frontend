@@ -21,6 +21,7 @@ import { SelectLocationScreen } from '../screens/profile/SelectLocationScreen';
 import { EditPreferencesScreen } from '../screens/profile/EditPreferencesScreen';
 import { ThemeSettingsScreen } from '../screens/profile/ThemeSettingsScreen';
 import { DevicesScreen } from '../screens/profile/DevicesScreen';
+import { DeleteAccountScreen } from '../screens/profile/DeleteAccountScreen';
 import { AboutScreen } from '../screens/support/AboutScreen';
 import { ContactScreen } from '../screens/support/ContactScreen';
 import { HelpSupportScreen } from '../screens/support/HelpSupportScreen';
@@ -61,6 +62,7 @@ export function AppNavigator() {
       <Stack.Screen name="EditPreferences" component={EditPreferencesScreen} />
       <Stack.Screen name="ThemeSettings" component={ThemeSettingsScreen} />
       <Stack.Screen name="Devices" component={DevicesScreen} />
+      <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
 
       {/*
         Company, support and legal. In the main stack rather than behind the

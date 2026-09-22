@@ -19,6 +19,7 @@ import { EditProfileScreen } from '../screens/profile/EditProfileScreen';
 import { ChangePasswordScreen } from '../screens/profile/ChangePasswordScreen';
 import { ThemeSettingsScreen } from '../screens/profile/ThemeSettingsScreen';
 import { DevicesScreen } from '../screens/profile/DevicesScreen';
+import { DeleteAccountScreen } from '../screens/profile/DeleteAccountScreen';
 import { AboutScreen } from '../screens/support/AboutScreen';
 import { ContactScreen } from '../screens/support/ContactScreen';
 import { HelpSupportScreen } from '../screens/support/HelpSupportScreen';
@@ -50,6 +51,7 @@ export function AdminNavigator() {
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <Stack.Screen name="ThemeSettings" component={ThemeSettingsScreen} />
       <Stack.Screen name="Devices" component={DevicesScreen} />
+      <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
 
       {/*
         The same five screens the customer app registers. A merchant is a user

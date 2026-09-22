@@ -23,6 +23,8 @@ interface AuthContextValue {
   register: (payload: authApi.RegisterPayload) => Promise<void>;
   login: (payload: authApi.LoginPayload) => Promise<void>;
   logout: () => Promise<void>;
+  /** Irreversible. Rejects (leaving the session intact) if the server refuses. */
+  deleteAccount: (password: string) => Promise<void>;
   refreshUser: () => Promise<void>;
   updateProfile: (payload: usersApi.UpdateMePayload) => Promise<void>;
 }
@@ -159,6 +161,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryClient.clear();
   }, [clearSession, queryClient]);
 
+  /**
+   * Deletes the account on the server, then tears the session down exactly as
+   * `logout` does (Play "Data deletion" policy).
+   *
+   * The server call comes first and is deliberately not wrapped in try/catch:
+   * it refuses for a wrong password, for a shop's Admin and for platform
+   * staff, and in every one of those cases the account still exists - clearing
+   * the session would sign the user out of an account they still have.
+   *
+   * There is no `unregisterDevice()` here, unlike `logout`: `push_devices`
+   * cascades with the user row, so the registration is already gone and the
+   * call would be an authenticated request with no session left to make it.
+   */
+  const deleteAccount = useCallback(
+    async (password: string) => {
+      await usersApi.deleteMe(password);
+      await clearSession();
+      queryClient.clear();
+    },
+    [clearSession, queryClient],
+  );
+
   const refreshUser = useCallback(async () => {
     const me = await authApi.fetchMe();
     setUser(me);
@@ -179,10 +203,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       register,
       login,
       logout,
+      deleteAccount,
       refreshUser,
       updateProfile,
     }),
-    [user, isLoading, isGuest, continueAsGuest, register, login, logout, refreshUser, updateProfile],
+    [user, isLoading, isGuest, continueAsGuest, register, login, logout, deleteAccount, refreshUser, updateProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

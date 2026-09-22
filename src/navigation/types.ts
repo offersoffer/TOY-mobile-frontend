@@ -63,6 +63,7 @@ export type RootStackParamList = SupportStackParamList & {
   EditPreferences: undefined;
   ThemeSettings: undefined;
   Devices: undefined;
+  DeleteAccount: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<
@@ -153,6 +154,7 @@ export type AdminStackParamList = SupportStackParamList & {
   ChangePassword: undefined;
   ThemeSettings: undefined;
   Devices: undefined;
+  DeleteAccount: undefined;
 };
 
 export type AdminTabScreenProps<T extends keyof AdminTabParamList> = CompositeScreenProps<

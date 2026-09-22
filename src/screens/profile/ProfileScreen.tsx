@@ -45,6 +45,10 @@ export function ProfileScreen({ navigation }: Props) {
 
   const otherRows: Row[] = [
     { icon: 'log-out-outline', label: 'Logout', onPress: confirmLogout, destructive: true },
+    // Required by Google Play's data-deletion policy to be reachable from
+    // inside the app, not only from the website. Last in the list and below
+    // Logout on purpose: it is the most destructive row on the screen.
+    { icon: 'trash-outline', label: 'Delete Account', onPress: () => navigation.navigate('DeleteAccount'), destructive: true },
   ];
 
   /**
