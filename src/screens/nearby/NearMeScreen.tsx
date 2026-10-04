@@ -185,8 +185,13 @@ export function NearMeScreen({ navigation }: Props) {
               <EmptyState icon="map-outline" title="Nothing nearby" message="No offers or services found close to you." />
             ) : !mapsAvailable ? (
               <ScrollView contentContainerStyle={{ padding: spacing.md, gap: spacing.xs }}>
+                {/* The map being unavailable is our configuration problem, not
+                    something the customer did or can act on. Naming the missing
+                    API key told them the app was half-built and gave them
+                    nothing to do about it; the list below is the whole feature
+                    either way, so this just says what they are looking at. */}
                 <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, marginBottom: spacing.xxs }}>
-                  Showing {pins.length} nearby as a list — the map needs a Google Maps API key.
+                  {pins.length} {pins.length === 1 ? 'place' : 'places'} near you, closest first
                 </Text>
                 {pins.map((listing) => (
                   <Pressable
