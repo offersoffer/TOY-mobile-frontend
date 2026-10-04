@@ -73,7 +73,7 @@ export function AdminProfileScreen({ navigation }: Props) {
   const helpRows: Row[] = [
     { icon: 'help-buoy-outline', label: 'Help & Support', onPress: () => navigation.navigate('HelpSupport', undefined) },
     { icon: 'chatbubbles-outline', label: 'My Support Requests', onPress: () => navigation.navigate('MySupportRequests') },
-    { icon: 'information-circle-outline', label: 'About Offers App', onPress: () => navigation.navigate('About') },
+    { icon: 'information-circle-outline', label: 'About OffersOffer', onPress: () => navigation.navigate('About') },
     { icon: 'shield-checkmark-outline', label: 'Privacy Policy', onPress: () => navigation.navigate('Legal', { document: 'privacy' }) },
     { icon: 'document-text-outline', label: 'Terms & Conditions', onPress: () => navigation.navigate('Legal', { document: 'terms' }) },
     { icon: 'call-outline', label: 'Contact Us', onPress: () => navigation.navigate('Contact') },

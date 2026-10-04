@@ -344,7 +344,7 @@ export function HomeScreen({ navigation }: Props) {
             }}
           >
             <Text style={{ color: colors.text, fontSize: fontSizes.lg, fontWeight: fontWeights.bold }}>
-              ✨ Make Offers App personal
+              ✨ Make OffersOffer personal
             </Text>
             <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, textAlign: 'center' }}>
               Get recommendations based on what you like, and hear before an offer expires.

@@ -106,7 +106,7 @@ export function NotificationPreferencesScreen({ navigation }: Props) {
               </Text>
               <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
                 {permission === 'denied'
-                  ? 'Turn them on for Offers App in your device settings.'
+                  ? 'Turn them on for OffersOffer in your device settings.'
                   : 'Tap to allow notifications on this device.'}
               </Text>
             </View>

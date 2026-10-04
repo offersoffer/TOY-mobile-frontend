@@ -93,12 +93,12 @@ export function ContactScreen({ navigation }: SupportScreenProps<'Contact'>) {
             For businesses
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: fontSizes.sm * 1.45 }}>
-            Want your shop’s offers on Offers App? Get in touch, or create an account and add your
+            Want your shop’s offers on OffersOffer? Get in touch, or create an account and add your
             shop — we review each one before it goes live.
           </Text>
           <Pressable onPress={() => navigation.navigate('About')}>
             <Text style={{ color: colors.brand, fontSize: fontSizes.sm, fontWeight: fontWeights.semibold }}>
-              About Offers App
+              About OffersOffer
             </Text>
           </Pressable>
         </View>

@@ -71,7 +71,7 @@ export function ProfileScreen({ navigation }: Props) {
           },
         ]
       : []),
-    { icon: 'information-circle-outline', label: 'About Offers App', onPress: () => navigation.navigate('About') },
+    { icon: 'information-circle-outline', label: 'About OffersOffer', onPress: () => navigation.navigate('About') },
     { icon: 'shield-checkmark-outline', label: 'Privacy Policy', onPress: () => navigation.navigate('Legal', { document: 'privacy' }) },
     { icon: 'document-text-outline', label: 'Terms & Conditions', onPress: () => navigation.navigate('Legal', { document: 'terms' }) },
     { icon: 'call-outline', label: 'Contact Us', onPress: () => navigation.navigate('Contact') },
@@ -90,7 +90,7 @@ export function ProfileScreen({ navigation }: Props) {
         <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: spacing.xl }}>
           <GuestGate
             icon="person-outline"
-            title="Welcome to Offers App"
+            title="Welcome to OffersOffer"
             message="Discover offers and services near you. Log in to save what you like, follow shops and track your savings."
             browseHint="Continue browsing as Guest — Offers, Services and Near Me need no account."
           />

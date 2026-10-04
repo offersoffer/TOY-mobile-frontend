@@ -94,7 +94,7 @@ export const SUPPORT_FAQS: Faq[] = [
   {
     question: 'How do I enable notifications?',
     answer:
-      'Profile → Notification Preferences, where each kind can be switched on or off separately. Your device also has to allow notifications for Offers App, which is set in the system settings.',
+      'Profile → Notification Preferences, where each kind can be switched on or off separately. Your device also has to allow notifications for OffersOffer, which is set in the system settings.',
   },
   {
     question: 'Why can’t I see nearby offers?',
@@ -192,7 +192,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   {
     heading: 'Location information',
     body: [
-      'Offers App has a Near Me feature, so location deserves saying plainly. Where you allow it, we may use your current location, a location you select yourself, and the coordinates of shops and their branches.',
+      'OffersOffer has a Near Me feature, so location deserves saying plainly. Where you allow it, we may use your current location, a location you select yourself, and the coordinates of shops and their branches.',
     ],
     list: [
       'To show nearby offers and services',
@@ -218,7 +218,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   {
     heading: 'How we use this information',
     list: [
-      'To provide and operate Offers App',
+      'To provide and operate OffersOffer',
       'To display offers and services',
       'To provide Near Me and other location features',
       'To personalise recommendations',
@@ -246,7 +246,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   {
     heading: 'Location privacy',
     body: [
-      'Offers App may ask for location permission in order to show nearby offers and services. You can keep using general discovery without granting it, and where location is unavailable you can select a location manually.',
+      'OffersOffer may ask for location permission in order to show nearby offers and services. You can keep using general discovery without granting it, and where location is unavailable you can select a location manually.',
     ],
     callout: 'Your precise location is not exposed to merchants.',
   },
@@ -269,7 +269,9 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   {
     heading: 'Payment information',
     body: [
-      'Offers App is currently free to use and does not process payments. When paid subscriptions are introduced, payment will be handled by an authorised payment service provider, and Offers App will not store sensitive card details such as your CVV or your UPI PIN. This section will be updated at that point.',
+      'OffersOffer is free for customers. Browsing offers, claiming them and following shops costs nothing, and we never ask a customer for payment details.',
+      'Shop owners can subscribe to a paid plan. Those payments are taken on Razorpay\u2019s own checkout page \u2014 Razorpay is an authorised payment service provider \u2014 so a card number, CVV or UPI PIN is entered there and never reaches us.',
+      'What we keep against a merchant\u2019s payment is the amount, the plan it paid for, the method used (card, UPI, netbanking or wallet), a short descriptor Razorpay echoes back such as the last four digits, Razorpay\u2019s own reference numbers, and whether the payment succeeded or failed. A merchant\u2019s billing history is built from exactly that and nothing more.',
     ],
   },
   {
@@ -311,7 +313,7 @@ export const PRIVACY_SECTIONS: LegalSection[] = [
   {
     heading: 'Children’s privacy',
     body: [
-      'Offers App is intended for people who are legally permitted to use the service under applicable law. We do not knowingly collect personal information from anyone who is not. If you believe a child has given us personal information, contact us and we will deal with it.',
+      'OffersOffer is intended for people who are legally permitted to use the service under applicable law. We do not knowingly collect personal information from anyone who is not. If you believe a child has given us personal information, contact us and we will deal with it.',
     ],
   },
   {
@@ -331,11 +333,11 @@ export const TERMS_SECTIONS: LegalSection[] = [
   {
     heading: 'About these terms',
     body: [
-      'These terms cover your use of Offers App — the app, the website and everything reachable through them. By using the service you accept them. If you do not, please do not use the service.',
+      'These terms cover your use of OffersOffer — the app, the website and everything reachable through them. By using the service you accept them. If you do not, please do not use the service.',
     ],
   },
   {
-    heading: 'Who can use Offers App',
+    heading: 'Who can use OffersOffer',
     body: [
       'You may browse offers, services and shops without an account. You need an account to save, claim, follow or book, and to receive reminders. You must be legally permitted to use the service under applicable law, and the details you give us when registering must be accurate.',
       'You are responsible for what happens under your account, so keep your password to yourself and tell us if you think somebody else has it.',
@@ -344,7 +346,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
   {
     heading: 'Offers are made by shops, not by us',
     body: [
-      'Offers App is a discovery platform. The offers, discounts, services, prices, images and descriptions on it are published by the shops themselves, and each shop is responsible for what it publishes and for honouring it.',
+      'OffersOffer is a discovery platform. The offers, discounts, services, prices, images and descriptions on it are published by the shops themselves, and each shop is responsible for what it publishes and for honouring it.',
       'We take reasonable steps to keep listings accurate, but we cannot guarantee that every listing is correct, current or available. The terms of a specific offer — what it applies to, what it excludes, when it ends — are set by the shop.',
     ],
     callout:
@@ -360,7 +362,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
   {
     heading: 'For merchants',
     body: [
-      'If you publish a shop, offers or services on Offers App, you confirm you are entitled to represent that business and that what you publish is accurate, lawful and yours to publish. You must honour the offers you have listed, on the terms you listed them.',
+      'If you publish a shop, offers or services on OffersOffer, you confirm you are entitled to represent that business and that what you publish is accurate, lawful and yours to publish. You must honour the offers you have listed, on the terms you listed them.',
       'We may decline, edit the visibility of, or remove a listing that breaks these terms, is misleading, or is the subject of substantiated reports.',
     ],
   },
@@ -368,7 +370,7 @@ export const TERMS_SECTIONS: LegalSection[] = [
     heading: 'Acceptable use',
     list: [
       'Do not publish false, misleading, unlawful or offensive content',
-      'Do not impersonate a person, a business or Offers App',
+      'Do not impersonate a person, a business or OffersOffer',
       'Do not attempt to break, overload, scrape or gain unauthorised access to the service',
       'Do not use anyone else’s account, or share your own',
       'Do not use claim codes in any way other than redeeming your own claim at the shop',
@@ -377,25 +379,25 @@ export const TERMS_SECTIONS: LegalSection[] = [
   {
     heading: 'Subscriptions and payment',
     body: [
-      'Offers App is currently free to use, for customers and for merchants. Paid merchant plans may be introduced later. If they are, the price, what each plan includes and how billing works will be shown before you agree to anything, and nothing will be charged without that.',
+      'OffersOffer is currently free to use, for customers and for merchants. Paid merchant plans may be introduced later. If they are, the price, what each plan includes and how billing works will be shown before you agree to anything, and nothing will be charged without that.',
     ],
   },
   {
     heading: 'Availability',
     body: [
-      'We aim to keep Offers App available and working, but we do not promise it will be uninterrupted or error-free. We may change, suspend or withdraw features, and we may carry out maintenance.',
+      'We aim to keep OffersOffer available and working, but we do not promise it will be uninterrupted or error-free. We may change, suspend or withdraw features, and we may carry out maintenance.',
     ],
   },
   {
     heading: 'Your content',
     body: [
-      'You keep ownership of what you upload — images, reviews, shop and listing details. By uploading it, you give us permission to host, display and distribute it as part of running Offers App, and you confirm you have the right to do so.',
+      'You keep ownership of what you upload — images, reviews, shop and listing details. By uploading it, you give us permission to host, display and distribute it as part of running OffersOffer, and you confirm you have the right to do so.',
     ],
   },
   {
     heading: 'Ending your use',
     body: [
-      'You can stop using Offers App and ask us to delete your account at any time. We may suspend or close an account that breaks these terms or is being used fraudulently.',
+      'You can stop using OffersOffer and ask us to delete your account at any time. We may suspend or close an account that breaks these terms or is being used fraudulently.',
     ],
   },
   {

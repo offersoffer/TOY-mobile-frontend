@@ -34,7 +34,7 @@ export function WelcomeScreen({ navigation }: Props) {
       <View style={{ flex: 1, padding: spacing.lg, justifyContent: 'center', gap: spacing.lg }}>
         <View style={{ alignItems: 'center', gap: spacing.xs }}>
           <Text style={{ fontSize: fontSizes.display, fontWeight: fontWeights.bold, color: colors.text }}>
-            Offers App
+            OffersOffer
           </Text>
           <Text
             style={{

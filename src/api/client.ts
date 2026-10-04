@@ -162,7 +162,7 @@ export function getApiErrorMessage(error: unknown, fallback = 'Something went wr
     }
     if (error.response.status >= 500) {
       // §37.
-      return 'We’re having trouble connecting to Offers App. Please try again.';
+      return 'We’re having trouble connecting to OffersOffer. Please try again.';
     }
   }
   return fallback;

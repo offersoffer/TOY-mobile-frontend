@@ -81,12 +81,12 @@ const COPY: Record<AuthIntentKind, AuthPromptCopy> = {
   },
   'profile-tab': {
     icon: 'person-outline',
-    title: 'Welcome to Offers App',
+    title: 'Welcome to OffersOffer',
     message: 'Discover offers and services near you. Log in to make it personal.',
   },
   generic: {
     icon: 'sparkles-outline',
-    title: 'Make Offers App personal',
+    title: 'Make OffersOffer personal',
     message: 'Get recommendations based on what you like, and save offers before they expire.',
   },
 };

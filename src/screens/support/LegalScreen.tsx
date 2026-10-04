@@ -30,13 +30,13 @@ const DOCUMENTS = {
   privacy: {
     title: 'Privacy Policy',
     intro:
-      'This policy explains what information Offers App collects, why we collect it, and what you can do about it.',
+      'This policy explains what information OffersOffer collects, why we collect it, and what you can do about it.',
     sections: PRIVACY_SECTIONS,
   },
   terms: {
     title: 'Terms & Conditions',
     intro:
-      'These terms cover your use of Offers App — what you can expect from us, and what we ask of you.',
+      'These terms cover your use of OffersOffer — what you can expect from us, and what we ask of you.',
     sections: TERMS_SECTIONS,
   },
 } as const;

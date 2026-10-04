@@ -8,7 +8,7 @@ import { ABOUT_FEATURES } from '../../content/support';
 import type { GoBackScreenProps } from '../../navigation/types';
 
 /**
- * About Offers App.
+ * About OffersOffer.
  *
  * Written for a customer rather than a regulator: what the app is for, and
  * what you can do with it. The legal register belongs on Privacy and Terms,
@@ -21,7 +21,7 @@ export function AboutScreen({ navigation }: GoBackScreenProps) {
 
   return (
     <Screen>
-      <ScreenHeader title="About Offers App" onBack={() => navigation.goBack()} />
+      <ScreenHeader title="About OffersOffer" onBack={() => navigation.goBack()} />
 
       <ScrollView contentContainerStyle={{ padding: spacing.md, paddingBottom: spacing.xxl, gap: spacing.lg }}>
         <View style={{ gap: spacing.xs }}>
@@ -29,7 +29,7 @@ export function AboutScreen({ navigation }: GoBackScreenProps) {
             Discover better offers. Find useful services. Shop smarter.
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.md, lineHeight: fontSizes.md * 1.5 }}>
-            Offers App is a local discovery platform that helps customers find offers, discounts,
+            OffersOffer is a local discovery platform that helps customers find offers, discounts,
             promotions and services from shops around them.
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.md, lineHeight: fontSizes.md * 1.5 }}>
@@ -83,7 +83,7 @@ export function AboutScreen({ navigation }: GoBackScreenProps) {
             Built for local businesses
           </Text>
           <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm, lineHeight: fontSizes.sm * 1.5 }}>
-            Offers App helps shops show their offers and services to nearby customers, and gives
+            OffersOffer helps shops show their offers and services to nearby customers, and gives
             merchants something they rarely get from a poster or a story post: how many people saw a
             listing, how many claimed it, and how many of those claims were actually redeemed at the
             counter.
