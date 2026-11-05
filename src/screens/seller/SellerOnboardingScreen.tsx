@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -231,6 +231,25 @@ export function SellerOnboardingScreen({ navigation }: Props) {
       pincode: current.pincode.trim() || picked.pincode || '',
     }));
   };
+
+  /**
+   * §7's middle state: a pin exists but nobody has vouched for it.
+   *
+   * Recorded so the banner can say "now press Confirm" and - just as
+   * important - so `locationReady` stays false. Coordinates on their own are
+   * not a confirmation, and §7 is explicit that they must never be treated as
+   * one.
+   */
+  const onPinMoved = useCallback(
+    (pin: { latitude: number; longitude: number; source: LocationSource; accuracy: number | null }) => {
+      setLatitude(pin.latitude);
+      setLongitude(pin.longitude);
+      setLocationSource(pin.source);
+      setLocationAccuracy(pin.accuracy);
+      setLocationConfirmed(false);
+    },
+    [],
+  );
 
   const payloadForStep = (): RegistrationPayload => {
     switch (stepKey) {
@@ -628,6 +647,7 @@ export function SellerOnboardingScreen({ navigation }: Props) {
               latitude={latitude}
               longitude={longitude}
               addressHint={latitude != null ? undefined : addressHint}
+              onPinMoved={onPinMoved}
               onConfirm={onPicked}
             />
 

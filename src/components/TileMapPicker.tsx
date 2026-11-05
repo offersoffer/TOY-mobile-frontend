@@ -41,6 +41,15 @@ interface Props {
   addressHint?: string;
   /** Height of the map surface; the default is about a third of a phone. */
   height?: number;
+  /**
+   * The pin moved, but has not been confirmed (§7).
+   *
+   * Without this the form cannot tell "no location yet" from "a pin is
+   * sitting there unconfirmed", because the only thing it would ever hear is
+   * the confirmation - which makes §7's middle state, the one whose whole job
+   * is to say "now press Confirm", unreachable.
+   */
+  onPinMoved?: (pin: { latitude: number; longitude: number; source: LocationSource; accuracy: number | null }) => void;
   onConfirm: (location: PickedLocation) => void;
 }
 
@@ -86,7 +95,14 @@ const distance = (touches: { pageX: number; pageY: number }[]) =>
  * every map app on a phone already teaches, and it avoids asking someone to
  * drag a marker they cannot see under their own thumb.
  */
-export function TileMapPicker({ latitude, longitude, addressHint, height = 260, onConfirm }: Props) {
+export function TileMapPicker({
+  latitude,
+  longitude,
+  addressHint,
+  height = 260,
+  onPinMoved,
+  onConfirm,
+}: Props) {
   const { colors, spacing, fontSizes, fontWeights, radii } = useTheme();
 
   const [centre, setCentre] = useState({
@@ -95,6 +111,16 @@ export function TileMapPicker({ latitude, longitude, addressHint, height = 260, 
   });
   const [zoom, setZoom] = useState(latitude != null ? STREET_ZOOM : 13);
   const [size, setSize] = useState({ width: 0, height });
+
+  /**
+   * A mirror of `centre` for the gesture handlers.
+   *
+   * The PanResponder is built once and would otherwise close over the centre
+   * as it was then. Reading it from a ref keeps the responder stable across
+   * every pan instead of rebuilding it on each frame of one.
+   */
+  const centreRef = useRef(centre);
+  centreRef.current = centre;
 
   const [source, setSource] = useState<LocationSource>('MANUAL');
   const [accuracy, setAccuracy] = useState<number | null>(null);
@@ -176,22 +202,23 @@ export function TileMapPicker({ latitude, longitude, addressHint, height = 260, 
    */
   const panBy = useCallback(
     (dx: number, dy: number) => {
-      setCentre((current) => {
-        const x = lngToWorldX(current.longitude, zoom) - dx;
-        const y = clamp(latToWorldY(current.latitude, zoom) - dy, 0, worldSize(zoom));
-        const next = {
-          latitude: worldYToLat(y, zoom),
-          longitude: wrapLongitude(worldXToLng(x, zoom)),
-        };
-        resolveAddress(next);
-        return next;
-      });
+      const current = centreRef.current;
+      const x = lngToWorldX(current.longitude, zoom) - dx;
+      const y = clamp(latToWorldY(current.latitude, zoom) - dy, 0, worldSize(zoom));
+      const next = {
+        latitude: worldYToLat(y, zoom),
+        longitude: wrapLongitude(worldXToLng(x, zoom)),
+      };
+
+      setCentre(next);
       setSource('MAP_PIN');
       setAccuracy(null);
       setPlaceId(null);
       setConfirmed(false);
+      resolveAddress(next);
+      onPinMoved?.({ ...next, source: 'MAP_PIN', accuracy: null });
     },
-    [zoom, resolveAddress],
+    [zoom, resolveAddress, onPinMoved],
   );
 
   /** Zoom keeps the centre - and therefore the pin - exactly where it is. */
@@ -339,6 +366,12 @@ export function TileMapPicker({ latitude, longitude, addressHint, height = 260, 
     setResults([]);
     setSearched(false);
     setConfirmed(false);
+    onPinMoved?.({
+      latitude: place.latitude,
+      longitude: place.longitude,
+      source: 'ADDRESS_SEARCH',
+      accuracy: null,
+    });
     setNotice('Pin placed from the search. Drag the map if it is not exactly right.');
   };
 
@@ -359,6 +392,12 @@ export function TileMapPicker({ latitude, longitude, addressHint, height = 260, 
       setAccuracy(metres);
       setPlaceId(null);
       setConfirmed(false);
+      onPinMoved?.({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        source: 'CURRENT_LOCATION',
+        accuracy: metres,
+      });
       // An imprecise fix is still a useful starting point, so this says what
       // it is rather than refusing it.
       setNotice(
