@@ -1,5 +1,11 @@
 import { apiClient } from './client';
-import type { ApiSuccess, Registration, RegistrationPayload } from '../types';
+import type {
+  ApiSuccess,
+  DuplicateCandidate,
+  Registration,
+  RegistrationPayload,
+  ShopClaim,
+} from '../types';
 
 /**
  * Self-service seller registration (Self-Service Onboarding §4, §21).
@@ -44,5 +50,41 @@ export async function submit(shopId: number): Promise<Registration> {
   const res = await apiClient.post<ApiSuccess<Registration>>(`/onboarding/${shopId}/submit`, {
     acceptedTerms: true,
   });
+  return res.data.data;
+}
+
+/**
+ * §16: shops we already have that might be theirs.
+ *
+ * Called before a registration exists, which is the point - the cheapest
+ * moment to stop a second copy of a shop being created is before the first
+ * field is saved.
+ */
+export async function duplicates(params: {
+  name?: string;
+  contactNumber?: string;
+  city?: string;
+  pincode?: string;
+}): Promise<DuplicateCandidate[]> {
+  const res = await apiClient.get<ApiSuccess<DuplicateCandidate[]>>('/onboarding/duplicates', { params });
+  return res.data.data;
+}
+
+/** §16 steps 3-5. Grants nothing: a reviewer decides. */
+export async function claimShop(
+  shopId: number,
+  reason: string,
+  contactPhone?: string,
+): Promise<ShopClaim> {
+  const res = await apiClient.post<ApiSuccess<ShopClaim>>('/onboarding/claims', {
+    shopId,
+    reason,
+    contactPhone,
+  });
+  return res.data.data;
+}
+
+export async function myClaims(): Promise<ShopClaim[]> {
+  const res = await apiClient.get<ApiSuccess<ShopClaim[]>>('/onboarding/claims/me');
   return res.data.data;
 }

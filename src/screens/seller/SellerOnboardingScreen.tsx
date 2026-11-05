@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -15,7 +15,14 @@ import {
   useSubmitRegistration,
 } from '../../hooks/useOnboarding';
 import { getApiErrorMessage } from '../../api/client';
-import type { LocationSource, Registration, RegistrationPayload } from '../../types';
+import type {
+  DuplicateCandidate,
+  LocationSource,
+  Registration,
+  RegistrationPayload,
+  ShopClaim,
+} from '../../types';
+import { onboardingApi } from '../../api';
 import type { RootStackScreenProps } from '../../navigation/types';
 import { RegistrationStatus } from './RegistrationStatus';
 
@@ -95,6 +102,13 @@ export function SellerOnboardingScreen({ navigation }: Props) {
   const [registration, setRegistration] = useState<Registration | null>(null);
   const [hydrated, setHydrated] = useState(false);
 
+  /** §16: shops we already have that might be the one being registered. */
+  const [duplicates, setDuplicates] = useState<DuplicateCandidate[]>([]);
+  const [claiming, setClaiming] = useState<DuplicateCandidate | null>(null);
+  const [claimReason, setClaimReason] = useState('');
+  const [claimSending, setClaimSending] = useState(false);
+  const [claimed, setClaimed] = useState<ShopClaim | null>(null);
+
   /** Where the pin came from and whether the seller confirmed it (§7). */
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
@@ -150,6 +164,57 @@ export function SellerOnboardingScreen({ navigation }: Props) {
     setStep(resumeAt);
     setFurthest(resumeAt);
   }, [hydrated, mine.isLoading, mine.data]);
+
+  /**
+   * §16: look for a shop we already have as the seller types the name.
+   *
+   * Debounced, and the answer to a stale request is discarded - a name typed
+   * letter by letter would otherwise cost a request per keystroke, and a slow
+   * earlier answer could arrive after a later one and overwrite it.
+   */
+  const searchToken = useRef(0);
+  useEffect(() => {
+    const name = fields.name.trim();
+    // Only while there is still a choice to make. Once the registration
+    // exists the seller has decided to create a new shop.
+    if (registration || name.length < 3) {
+      setDuplicates([]);
+      return;
+    }
+
+    const token = ++searchToken.current;
+    const timer = setTimeout(() => {
+      onboardingApi
+        .duplicates({ name, contactNumber: fields.contactNumber.trim() })
+        .then((matches) => {
+          if (token === searchToken.current) setDuplicates(matches);
+        })
+        // A failed duplicate check must never block the registration: it is
+        // a helpful suggestion, not a gate.
+        .catch(() => token === searchToken.current && setDuplicates([]));
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [fields.name, fields.contactNumber, registration]);
+
+  const sendClaim = () => {
+    const candidate = claiming;
+    const reason = claimReason.trim();
+    if (!candidate || reason.length < 20) return;
+
+    setClaimSending(true);
+    onboardingApi
+      .claimShop(candidate.shopId, reason, fields.contactNumber.trim())
+      .then((claim) => {
+        setClaimSending(false);
+        setClaiming(null);
+        setClaimed(claim);
+      })
+      .catch((err) => {
+        setClaimSending(false);
+        setError(getApiErrorMessage(err, 'We could not send that request. Please try again.'));
+      });
+  };
 
   const stepKey = STEPS[step]?.key ?? 'contact';
 
@@ -473,6 +538,125 @@ export function SellerOnboardingScreen({ navigation }: Props) {
         {stepKey === 'shop' ? (
           <View style={{ gap: spacing.sm }}>
             {sectionTitle('Shop details')}
+
+            {/*
+              §16: before a second copy of a shop gets created. Here rather
+              than as a step of its own, because the only thing that makes
+              the search useful is the shop's name, and this is where the
+              seller types it.
+            */}
+            {claimed ? (
+              <View
+                style={{
+                  padding: spacing.sm,
+                  borderRadius: radii.md,
+                  borderWidth: 1,
+                  borderColor: colors.success,
+                  backgroundColor: colors.successBg,
+                  gap: spacing.xxs,
+                }}
+              >
+                <Text style={{ color: colors.success, fontWeight: fontWeights.bold, fontSize: fontSizes.md }}>
+                  We have your request for {claimed.shopName}
+                </Text>
+                <Text style={{ color: colors.text, fontSize: fontSizes.sm, lineHeight: 19 }}>
+                  Our team will check it and let you know. You do not have access to that shop yet,
+                  and you can keep filling this in if you would rather register a new one.
+                </Text>
+              </View>
+            ) : duplicates.length ? (
+              <View
+                style={{
+                  padding: spacing.sm,
+                  borderRadius: radii.md,
+                  borderWidth: 1,
+                  borderColor: colors.info,
+                  backgroundColor: colors.infoBg,
+                  gap: spacing.xs,
+                }}
+              >
+                <Text style={{ color: colors.info, fontWeight: fontWeights.bold, fontSize: fontSizes.md }}>
+                  We may already have your shop
+                </Text>
+                <Text style={{ color: colors.text, fontSize: fontSizes.sm, lineHeight: 19 }}>
+                  If one of these is yours, ask for access instead of creating a second listing —
+                  you keep the reviews and offers already on it.
+                </Text>
+
+                {duplicates.map((candidate) => (
+                  <View
+                    key={candidate.shopId}
+                    style={{
+                      padding: spacing.sm,
+                      borderRadius: radii.sm,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      backgroundColor: colors.surface,
+                      gap: spacing.xxs,
+                    }}
+                  >
+                    <Text style={{ color: colors.text, fontWeight: fontWeights.semibold }}>
+                      {candidate.name}
+                    </Text>
+                    <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                      {candidate.city ?? 'Location unknown'}
+                      {candidate.pincode ? ` · ${candidate.pincode}` : ''} · matched on{' '}
+                      {candidate.matchedOn.join(', ')}
+                    </Text>
+                    {candidate.alreadyYours ? (
+                      <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                        You already manage this
+                      </Text>
+                    ) : candidate.claimPending ? (
+                      <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                        Request already sent
+                      </Text>
+                    ) : (
+                      <Button
+                        label="This is my shop"
+                        variant="secondary"
+                        size="sm"
+                        onPress={() => {
+                          setClaiming(candidate);
+                          setClaimReason('');
+                        }}
+                      />
+                    )}
+                  </View>
+                ))}
+
+                {claiming ? (
+                  <View style={{ gap: spacing.xs, paddingTop: spacing.xs }}>
+                    <TextField
+                      label={`How is ${claiming.name} yours? *`}
+                      value={claimReason}
+                      onChangeText={setClaimReason}
+                      multiline
+                      numberOfLines={3}
+                      style={{ minHeight: 76, textAlignVertical: 'top' }}
+                      placeholder="e.g. I am the owner. The shop has been in my family since 1998 and I have the GST certificate."
+                    />
+                    <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                      Our team reads this and checks before giving anyone access. Nothing changes
+                      until they do.
+                    </Text>
+                    <Button
+                      label={claimSending ? 'Sending…' : 'Send the request'}
+                      onPress={sendClaim}
+                      disabled={claimReason.trim().length < 20 || claimSending}
+                      fullWidth
+                    />
+                    <Button
+                      label="Cancel"
+                      variant="ghost"
+                      onPress={() => setClaiming(null)}
+                      fullWidth
+                    />
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
+
             <TextField
               label="Shop name *"
               value={fields.name}

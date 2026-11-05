@@ -92,3 +92,40 @@ export interface RegistrationPayload {
   address?: AddressPayload;
   verification?: VerificationPayload;
 }
+
+/** A shop we already have that might be the one this seller is registering (§16). */
+export interface DuplicateCandidate {
+  shopId: number;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  area: string | null;
+  city: string | null;
+  pincode: string | null;
+  categories: string[];
+  /** Why we think it might be theirs, in words the seller can read. */
+  matchedOn: string[];
+  alreadyYours: boolean;
+  claimPending: boolean;
+}
+
+/**
+ * Named `ShopClaimStatus` rather than `ClaimStatus`: an offer claim is
+ * already a thing in this app, and two unrelated `ClaimStatus` types would
+ * collide in the barrel and read as the same concept in every import.
+ */
+export type ShopClaimStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN';
+
+export interface ShopClaim {
+  id: number;
+  shopId: number;
+  shopName: string;
+  shopSlug: string;
+  reason: string;
+  contactPhone: string | null;
+  status: ShopClaimStatus;
+  /** Set by a reviewer on rejection, and shown to the requester verbatim. */
+  decisionReason: string | null;
+  decidedAt: string | null;
+  createdAt: string;
+}
