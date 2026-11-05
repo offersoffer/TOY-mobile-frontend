@@ -27,6 +27,7 @@ export type AuthIntentKind =
   | 'book-service'
   | 'enquire-service'
   | 'notifications'
+  | 'register-shop'
   | 'saved-tab'
   | 'profile-tab'
   | 'generic';
@@ -73,6 +74,13 @@ const COPY: Record<AuthIntentKind, AuthPromptCopy> = {
     icon: 'notifications-outline',
     title: 'Turn on notifications',
     message: 'Log in to get expiry reminders for the offers you save.',
+  },
+  // Onboarding §4: a registration belongs to an account from the first step,
+  // because the account is what the seller comes back to it with.
+  'register-shop': {
+    icon: 'storefront-outline',
+    title: 'List your shop on OffersOffer',
+    message: 'Log in or create a free account to register your shop. It takes a few minutes and you can finish it later.',
   },
   'saved-tab': {
     icon: 'heart-outline',

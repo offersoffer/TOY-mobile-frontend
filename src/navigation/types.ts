@@ -64,6 +64,14 @@ export type RootStackParamList = SupportStackParamList & {
   ThemeSettings: undefined;
   Devices: undefined;
   DeleteAccount: undefined;
+  /**
+   * Self-service seller registration (Onboarding §4).
+   *
+   * In the customer stack rather than the admin one, because that is where the
+   * person who needs it is: someone with no shop yet. A seller only moves to
+   * the Shop Admin app once their registration is approved.
+   */
+  SellerOnboarding: undefined;
 };
 
 export type MainTabScreenProps<T extends keyof MainTabParamList> = CompositeScreenProps<

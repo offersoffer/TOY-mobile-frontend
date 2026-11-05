@@ -5,7 +5,9 @@ import { useTheme } from '../../theme';
 import { Screen, Avatar } from '../../components/ui';
 import { BrandMark } from '../../components';
 import { useAuth } from '../../store/AuthContext';
+import { useAuthPrompt } from '../../store/AuthPromptContext';
 import { GuestGate } from '../../components/GuestGate';
+import type { VerificationStatus } from '../../types';
 import type { MainTabScreenProps } from '../../navigation/types';
 
 type Props = MainTabScreenProps<'Profile'>;
@@ -15,11 +17,73 @@ interface Row {
   label: string;
   onPress: () => void;
   destructive?: boolean;
+  /** A second line, for a row whose state the customer needs to see. */
+  hint?: string;
 }
+
+/**
+ * What the seller row says, by where their registration stands (§12).
+ *
+ * A registration in flight is the most useful thing this screen can tell
+ * them, so the row reports it rather than reading "Sell on OffersOffer" as if
+ * nothing had been started. Read from the membership the account already
+ * carries, so the row costs no request.
+ */
+const SELLER_ROW: Record<VerificationStatus, { label: string; hint: string; icon: keyof typeof Ionicons.glyphMap }> = {
+  DRAFT: {
+    label: 'Finish registering your shop',
+    hint: 'Your registration is saved — pick up where you left off',
+    icon: 'storefront-outline',
+  },
+  PENDING_VERIFICATION: {
+    label: 'Shop registration',
+    hint: 'Pending verification',
+    icon: 'time-outline',
+  },
+  ADDITIONAL_INFO_REQUIRED: {
+    label: 'Shop registration',
+    hint: 'We need a little more information',
+    icon: 'alert-circle-outline',
+  },
+  REJECTED: {
+    label: 'Shop registration',
+    hint: 'Not approved — tap to read why',
+    icon: 'close-circle-outline',
+  },
+  VERIFIED: { label: 'Shop registration', hint: 'Verified', icon: 'checkmark-circle-outline' },
+  SUSPENDED: { label: 'Shop registration', hint: 'Suspended', icon: 'ban-outline' },
+};
 
 export function ProfileScreen({ navigation }: Props) {
   const { colors, spacing, fontSizes, fontWeights, radii } = useTheme();
   const { user, logout, isAuthenticated } = useAuth();
+  const prompt = useAuthPrompt();
+
+  /**
+   * Onboarding §3/§4: the way into self-service registration.
+   *
+   * Here rather than in the bottom navigation on purpose. The five tabs are
+   * the customer's app and nearly every customer will never register a shop;
+   * giving a merchant feature a sixth of that bar would cost every customer
+   * something to serve a few. Profile is where account-level things already
+   * live, and it is one tap away.
+   *
+   * A guest sees it too - §4 wants the path discoverable - and gets the login
+   * sheet, which resumes into the wizard once they have an account.
+   */
+  const pending = user?.shops?.find((shop) => shop.awaitingFirstApproval) ?? null;
+  const sellerRow: Row = pending?.verificationStatus
+    ? { ...SELLER_ROW[pending.verificationStatus], onPress: () => navigation.navigate('SellerOnboarding') }
+    : {
+        icon: 'storefront-outline',
+        label: 'Sell on OffersOffer',
+        hint: 'Register your shop and reach customers nearby',
+        onPress: () => {
+          if (prompt.require('register-shop', () => navigation.navigate('SellerOnboarding'))) {
+            navigation.navigate('SellerOnboarding');
+          }
+        },
+      };
 
   const confirmLogout = () => {
     Alert.alert('Log out', 'Are you sure you want to log out?', [
@@ -94,7 +158,8 @@ export function ProfileScreen({ navigation }: Props) {
             message="Discover offers and services near you. Log in to save what you like, follow shops and track your savings."
             browseHint="Continue browsing as Guest — Offers, Services and Near Me need no account."
           />
-          <View style={{ padding: spacing.md }}>
+          <View style={{ padding: spacing.md, gap: spacing.lg }}>
+            <RowGroup title="For businesses" rows={[sellerRow]} />
             <RowGroup title="Help & legal" rows={helpRows} />
           </View>
         </ScrollView>
@@ -125,6 +190,7 @@ export function ProfileScreen({ navigation }: Props) {
           </View>
         </View>
 
+        <RowGroup title="For businesses" rows={[sellerRow]} />
         <RowGroup title="Account" rows={accountRows} />
         <RowGroup title="Preferences" rows={preferenceRows} />
         <RowGroup title="Help & legal" rows={helpRows} />
@@ -160,9 +226,14 @@ function RowGroup({ title, rows }: { title?: string; rows: Row[] }) {
             }}
           >
             <Ionicons name={row.icon} size={18} color={row.destructive ? colors.danger : colors.textMuted} />
-            <Text style={{ flex: 1, color: row.destructive ? colors.danger : colors.text, fontSize: fontSizes.md, fontWeight: fontWeights.medium }}>
-              {row.label}
-            </Text>
+            <View style={{ flex: 1, gap: 1 }}>
+              <Text style={{ color: row.destructive ? colors.danger : colors.text, fontSize: fontSizes.md, fontWeight: fontWeights.medium }}>
+                {row.label}
+              </Text>
+              {row.hint ? (
+                <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>{row.hint}</Text>
+              ) : null}
+            </View>
             {!row.destructive ? <Ionicons name="chevron-forward" size={16} color={colors.textSubtle} /> : null}
           </Pressable>
         ))}

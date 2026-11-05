@@ -19,3 +19,4 @@ export * from './useAdminServices';
 export * from './useAdminServiceOffers';
 export * from './useAdminServiceAnalytics';
 export * from './useVisibility';
+export * from './useOnboarding';

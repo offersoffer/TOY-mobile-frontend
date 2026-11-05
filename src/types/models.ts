@@ -1,3 +1,5 @@
+import type { VerificationStatus } from './onboarding';
+
 export interface PreferredLocation {
   city: string | null;
   latitude: number | null;
@@ -13,6 +15,16 @@ export interface UserShopMembership {
   designation: string | null;
   roleName: string | null;
   permissions: string[];
+  /** Where this shop sits in review, or null if it never went through it. */
+  verificationStatus: VerificationStatus | null;
+  /**
+   * True while a registration is still waiting on its first decision (§12).
+   *
+   * The seller holds ADMIN on their own registration from the moment the
+   * draft exists, so this - not the permission list - is what tells a
+   * registration in flight from a shop to run.
+   */
+  awaitingFirstApproval: boolean;
 }
 
 export interface User {

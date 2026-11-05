@@ -22,6 +22,7 @@ import { EditPreferencesScreen } from '../screens/profile/EditPreferencesScreen'
 import { ThemeSettingsScreen } from '../screens/profile/ThemeSettingsScreen';
 import { DevicesScreen } from '../screens/profile/DevicesScreen';
 import { DeleteAccountScreen } from '../screens/profile/DeleteAccountScreen';
+import { SellerOnboardingScreen } from '../screens/seller/SellerOnboardingScreen';
 import { AboutScreen } from '../screens/support/AboutScreen';
 import { ContactScreen } from '../screens/support/ContactScreen';
 import { HelpSupportScreen } from '../screens/support/HelpSupportScreen';
@@ -63,6 +64,13 @@ export function AppNavigator() {
       <Stack.Screen name="ThemeSettings" component={ThemeSettingsScreen} />
       <Stack.Screen name="Devices" component={DevicesScreen} />
       <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+
+      {/*
+        Onboarding §4: a customer registering their own shop. Not a modal -
+        it is six steps long and the seller is expected to leave and come
+        back, so it gets a page and a back gesture like any other screen.
+      */}
+      <Stack.Screen name="SellerOnboarding" component={SellerOnboardingScreen} />
 
       {/*
         Company, support and legal. In the main stack rather than behind the
