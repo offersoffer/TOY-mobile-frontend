@@ -15,6 +15,7 @@ import {
   useSubmitRegistration,
 } from '../../hooks/useOnboarding';
 import { getApiErrorMessage } from '../../api/client';
+import { formatDate } from '../../utils/format';
 import type {
   DuplicateCandidate,
   LocationSource,
@@ -109,6 +110,17 @@ export function SellerOnboardingScreen({ navigation }: Props) {
   const [claimSending, setClaimSending] = useState(false);
   const [claimed, setClaimed] = useState<ShopClaim | null>(null);
 
+  /**
+   * §16: requests already waiting on a reviewer.
+   *
+   * Without this the request is write-only - the confirmation shows once and
+   * a seller who leaves the app has no way to tell whether anything is
+   * happening, which is exactly the state that produces a second
+   * registration for the same shop.
+   */
+  const [openClaims, setOpenClaims] = useState<ShopClaim[]>([]);
+  const [withdrawing, setWithdrawing] = useState<number | null>(null);
+
   /** Where the pin came from and whether the seller confirmed it (§7). */
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
@@ -165,6 +177,37 @@ export function SellerOnboardingScreen({ navigation }: Props) {
     setFurthest(resumeAt);
   }, [hydrated, mine.isLoading, mine.data]);
 
+  /*
+    Loaded once on entry. Only PENDING is kept: a decided claim arrives as a
+    notification, and an approved one shows up as a shop the seller can
+    manage, so listing those here would leave a list that never empties.
+  */
+  useEffect(() => {
+    let live = true;
+    onboardingApi
+      .myClaims()
+      .then((claims) => live && setOpenClaims(claims.filter((claim) => claim.status === 'PENDING')))
+      .catch(() => live && setOpenClaims([]));
+    return () => {
+      live = false;
+    };
+  }, []);
+
+  const withdrawClaim = (claim: ShopClaim) => {
+    setWithdrawing(claim.id);
+    onboardingApi
+      .withdrawClaim(claim.id)
+      .then(() => {
+        setWithdrawing(null);
+        setOpenClaims((claims) => claims.filter((c) => c.id !== claim.id));
+        if (claimed?.id === claim.id) setClaimed(null);
+      })
+      .catch((err) => {
+        setWithdrawing(null);
+        setError(getApiErrorMessage(err, 'We could not withdraw that request. Please try again.'));
+      });
+  };
+
   /**
    * §16: look for a shop we already have as the seller types the name.
    *
@@ -209,6 +252,8 @@ export function SellerOnboardingScreen({ navigation }: Props) {
         setClaimSending(false);
         setClaiming(null);
         setClaimed(claim);
+        // So it is still there if the seller comes back to this screen.
+        setOpenClaims((claims) => [claim, ...claims.filter((c) => c.id !== claim.id)]);
       })
       .catch((err) => {
         setClaimSending(false);
@@ -512,6 +557,67 @@ export function SellerOnboardingScreen({ navigation }: Props) {
             }}
           >
             <Text style={{ color: colors.danger, fontSize: fontSizes.sm }}>{error}</Text>
+          </View>
+        ) : null}
+
+        {/*
+          §16: requests already waiting on a reviewer. Above the steps rather
+          than inside the details step, because its whole job is to be seen
+          before the seller starts typing the same shop in again.
+        */}
+        {openClaims.length ? (
+          <View
+            style={{
+              padding: spacing.sm,
+              borderRadius: radii.md,
+              borderWidth: 1,
+              borderColor: colors.warning,
+              backgroundColor: colors.warningBg,
+              gap: spacing.xs,
+            }}
+          >
+            <Text
+              style={{ color: colors.warning, fontWeight: fontWeights.bold, fontSize: fontSizes.md }}
+            >
+              You have already asked to manage{' '}
+              {openClaims.length === 1 ? 'a shop' : `${openClaims.length} shops`}
+            </Text>
+            <Text style={{ color: colors.text, fontSize: fontSizes.sm, lineHeight: 19 }}>
+              Our team is checking {openClaims.length === 1 ? 'it' : 'them'}. You do not have access
+              yet. Carry on below only if you want to register a different shop.
+            </Text>
+
+            {openClaims.map((claim) => (
+              <View
+                key={claim.id}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: spacing.sm,
+                  padding: spacing.sm,
+                  borderRadius: radii.sm,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                  backgroundColor: colors.surface,
+                }}
+              >
+                <View style={{ flex: 1, gap: 1 }}>
+                  <Text style={{ color: colors.text, fontWeight: fontWeights.semibold }}>
+                    {claim.shopName}
+                  </Text>
+                  <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                    Requested {formatDate(claim.createdAt)}
+                  </Text>
+                </View>
+                <Button
+                  label={withdrawing === claim.id ? 'Withdrawing…' : 'Withdraw'}
+                  variant="ghost"
+                  size="sm"
+                  disabled={withdrawing === claim.id}
+                  onPress={() => withdrawClaim(claim)}
+                />
+              </View>
+            ))}
           </View>
         ) : null}
 

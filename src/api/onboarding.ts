@@ -88,3 +88,14 @@ export async function myClaims(): Promise<ShopClaim[]> {
   const res = await apiClient.get<ApiSuccess<ShopClaim[]>>('/onboarding/claims/me');
   return res.data.data;
 }
+
+/**
+ * Takes a request back before a reviewer has acted on it.
+ *
+ * Removes nothing from the shop and gives up nothing the seller had: a
+ * pending claim never granted access in the first place (§16).
+ */
+export async function withdrawClaim(id: number): Promise<ShopClaim> {
+  const res = await apiClient.post<ApiSuccess<ShopClaim>>(`/onboarding/claims/${id}/withdraw`, {});
+  return res.data.data;
+}
