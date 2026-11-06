@@ -12,16 +12,36 @@
  *
  * OpenStreetMap's tile servers are donated infrastructure with a usage policy
  * (https://operations.osmfoundation.org/policies/tiles/): no bulk downloading,
- * attribution displayed, and heavy applications expected to move to their own
- * or a commercial provider. The picker honours the first two - it fetches only
- * the tiles on screen, and draws the attribution over the map - and the third
- * is why this is configuration rather than a constant in the component.
+ * attribution displayed, a User-Agent that identifies the application, and
+ * heavy applications expected to move to their own or a commercial provider.
+ * The picker honours the first three - it fetches only the tiles on screen,
+ * draws the attribution over the map, and sends MAP_TILE_HEADERS below - and
+ * the last is why the URL is configuration rather than a constant in the
+ * component.
  */
 
 export const MAP_TILE_URL =
   process.env.EXPO_PUBLIC_MAP_TILE_URL ?? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
 export const MAP_ATTRIBUTION = process.env.EXPO_PUBLIC_MAP_ATTRIBUTION ?? '© OpenStreetMap contributors';
+
+/**
+ * Sent with every tile request.
+ *
+ * Not optional politeness: OSM's policy requires a User-Agent that identifies
+ * the application, and enforces it. A release build on a real phone sends
+ * okhttp's default agent, which identifies nothing, and OSM answers with a
+ * tile reading "Access blocked - App is not following the tile usage policy"
+ * instead of the map. The seller's location step is then unusable, and
+ * nothing in the app logs an error, because a 200 with a picture in it is
+ * exactly what the image loader asked for.
+ *
+ * The browser sets its own agent, which is why the same picker works on web
+ * and this was invisible until it ran on a device.
+ */
+export const MAP_TILE_HEADERS: Record<string, string> = {
+  'User-Agent': 'OffersOffer/1.0 (+https://offersoffer.in; Android; contact support@offersoffer.in)',
+};
 
 /** Side of a raster tile in pixels; 256 is the scheme every provider uses. */
 export const TILE_SIZE = 256;

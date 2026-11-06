@@ -19,6 +19,7 @@ import type { GeoPlace, LocationSource } from '../types';
 import type { PickedLocation } from './MapLocationPicker';
 import {
   MAP_ATTRIBUTION,
+  MAP_TILE_HEADERS,
   MAX_ZOOM,
   MIN_ZOOM,
   TILE_SIZE,
@@ -26,10 +27,10 @@ import {
   latToWorldY,
   lngToWorldX,
   tileUrl,
+  worldSize,
   worldXToLng,
   worldYToLat,
   wrapLongitude,
-  worldSize,
 } from '../utils/map';
 
 export type { PickedLocation };
@@ -522,7 +523,10 @@ export function TileMapPicker({
           {tiles.map((tile) => (
             <Image
               key={tile.key}
-              source={{ uri: tile.url }}
+              // headers, not just the uri: OSM blocks requests whose agent
+              // does not identify the app, and answers with a picture saying
+              // so rather than an error (see MAP_TILE_HEADERS).
+              source={{ uri: tile.url, headers: MAP_TILE_HEADERS }}
               style={{ position: 'absolute', left: tile.left, top: tile.top, width: TILE_SIZE, height: TILE_SIZE }}
               contentFit="fill"
               // Tiles are immutable for a given z/x/y, so a cache hit is
