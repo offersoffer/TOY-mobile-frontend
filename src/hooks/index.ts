@@ -20,3 +20,4 @@ export * from './useAdminServiceOffers';
 export * from './useAdminServiceAnalytics';
 export * from './useVisibility';
 export * from './useOnboarding';
+export * from './useRedemptions';

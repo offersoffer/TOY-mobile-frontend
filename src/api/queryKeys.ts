@@ -25,6 +25,15 @@ export const queryKeys = {
   supportTicket: (id: number) => ['supportTicket', id] as const,
   supportContact: () => ['supportContact'] as const,
 
+  // ---- Shop Admin: claim verification & redemption (§24, §30) ----
+  // The shared 'redemptions' and 'redemptionSummary' prefixes are what a
+  // confirmed redemption invalidates, so both lists and the counters refresh
+  // from one mutation without naming every filter combination in use.
+  redemptionSummary: (shopId: number | null) => ['redemptionSummary', shopId] as const,
+  redemptions: (params: unknown) => ['redemptions', params] as const,
+  merchantClaims: (params: unknown) => ['redemptions', 'claims', params] as const,
+  claimAudit: (claimId: number, kind: string) => ['claimAudit', claimId, kind] as const,
+
   // ---- Visibility & Promotion System ----
   rankedFeed: (params: unknown) => ['rankedFeed', params] as const,
   rankedNearMe: (params: unknown) => ['rankedNearMe', params] as const,

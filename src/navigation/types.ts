@@ -137,6 +137,16 @@ export type AdminTabParamList = {
   Dashboard: undefined;
   Offers: undefined;
   Create: undefined;
+  /**
+   * Verify Claim (Claim/Redemption §7-§11). A tab rather than a row inside
+   * Dashboard because of when it gets used: a customer is standing at the
+   * counter holding up their phone, and every tap between the shopkeeper and
+   * the scanner is one they take while that customer waits.
+   *
+   * Registered only for staff holding VERIFY_CLAIM, so the tab bar does not
+   * offer a screen that would answer 403.
+   */
+  Verify: undefined;
   Analytics: undefined;
   AdminProfile: undefined;
 };
@@ -153,6 +163,8 @@ export type AdminStackParamList = SupportStackParamList & {
   Subscription: undefined;
   BillingHistory: undefined;
   AnalyticsDetail: { dashboard: 'overview' | 'offerPerformance' | 'funnel' | 'locations' | 'branches' };
+  /** Redemption history and the claims console (§24, §30). */
+  Redemptions: undefined;
   AdminServices: undefined;
   ServiceForm: { serviceId?: number } | undefined;
   ServiceOffers: { serviceId: number };

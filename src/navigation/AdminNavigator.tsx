@@ -10,6 +10,7 @@ import { BannerFormScreen } from '../screens/admin/banners/BannerFormScreen';
 import { SubscriptionScreen } from '../screens/admin/subscription/SubscriptionScreen';
 import { BillingHistoryScreen } from '../screens/admin/subscription/BillingHistoryScreen';
 import { AnalyticsDetailScreen } from '../screens/admin/analytics/AnalyticsDetailScreen';
+import { RedemptionHistoryScreen } from '../screens/admin/redemptions/RedemptionHistoryScreen';
 import { AdminServicesScreen } from '../screens/admin/services/AdminServicesScreen';
 import { ServiceFormScreen } from '../screens/admin/services/ServiceFormScreen';
 import { ServiceOffersScreen } from '../screens/admin/services/ServiceOffersScreen';
@@ -42,6 +43,7 @@ export function AdminNavigator() {
       <Stack.Screen name="Subscription" component={SubscriptionScreen} />
       <Stack.Screen name="BillingHistory" component={BillingHistoryScreen} />
       <Stack.Screen name="AnalyticsDetail" component={AnalyticsDetailScreen} />
+      <Stack.Screen name="Redemptions" component={RedemptionHistoryScreen} />
       <Stack.Screen name="AdminServices" component={AdminServicesScreen} />
       <Stack.Screen name="ServiceForm" component={ServiceFormScreen} />
       <Stack.Screen name="ServiceOffers" component={ServiceOffersScreen} />

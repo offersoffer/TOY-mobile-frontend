@@ -617,3 +617,112 @@ export interface ServiceCategoryInsightRow {
   views: number;
   saves: number;
 }
+
+// ---- Claim verification & redemption (Claim/Redemption §7-§11, §24) --------
+
+/**
+ * Which kind of coupon a claim belongs to (§22).
+ *
+ * Product-offer and service-offer claims live in separate tables with separate
+ * id sequences, so every merchant call that names a claim by id has to say
+ * which of the two it means. The verify screen never asks - a shopkeeper
+ * holding a code has no idea which sort it is, and the server searches both -
+ * but the history lists report one kind at a time.
+ */
+export type ClaimKind = 'offer' | 'service_offer';
+
+/** How the code reached the till (§30). Recorded on the redemption. */
+export type VerificationMethod = 'QR_SCAN' | 'CODE_ENTRY';
+
+/**
+ * A claim as the *merchant* is allowed to see it.
+ *
+ * Deliberately not the customer `Claim` from `models.ts`: this carries the
+ * customer's name and who redeemed it, and carries no `qrValue` - the merchant
+ * audience never receives one, because a shop that could re-render a customer's
+ * QR could redeem on their behalf.
+ */
+export interface MerchantClaim {
+  id: number;
+  kind: ClaimKind;
+  code: string;
+  status: 'claimed' | 'redeemed' | 'expired' | 'cancelled' | 'revoked';
+  claimedAt: string;
+  expiresAt: string | null;
+  redeemedAt: string | null;
+  redemptionCount: number;
+  maxRedemptions: number;
+  verificationMethod: VerificationMethod | null;
+  offer: { id: number; title: string; offerText: string | null; endDate: string; imageUrl: string | null };
+  shop: { id: number; name: string };
+  branch: { id: number; name: string } | null;
+  customer: { id: number; name: string };
+  redeemedBy: { id: number; name: string } | null;
+}
+
+/**
+ * What `POST /redemptions/verify` answers with: the claim, plus the two things
+ * the till needs that are not properties of the claim itself.
+ */
+export interface ClaimVerification extends MerchantClaim {
+  /** §10's "READY TO REDEEM". Verifying never redeems, so the screen is told. */
+  verdict: 'READY_TO_REDEEM';
+  /** Whether *this* member of staff may press Confirm, for *this* shop. */
+  canRedeem: boolean;
+  branchId: number | null;
+}
+
+/**
+ * Why a code was refused (§13-§15).
+ *
+ * `message` is the server's sentence and is what gets shown; the reason only
+ * chooses a heading and an icon. A code for another shop deliberately arrives
+ * as a plain not-found with no reason at all, so the verify screen cannot be
+ * used to ask whether a code is live somewhere else.
+ */
+export interface ClaimRejection {
+  message: string;
+  reason: string | null;
+  redeemedAt: string | null;
+  /**
+   * The request never got an answer - no signal at the back of the shop, or a
+   * timeout. Kept apart from every other refusal because the coupon in the
+   * customer's hand may well be valid, and a screen that said "invalid code"
+   * here would have the shopkeeper turn them away over a dead connection.
+   */
+  unreachable: boolean;
+}
+
+/** Today's Activity for the merchant dashboard (§35) and the §20 conversion. */
+export interface RedemptionSummary {
+  claimsToday: number;
+  redemptionsToday: number;
+  pending: number;
+  claimsTotal: number;
+  redemptionsTotal: number;
+  /** Null, not zero, when nothing has been claimed yet - §20. */
+  claimToRedemption: number | null;
+}
+
+/** How many wrong codes this account may still try before §28 locks it out. */
+export interface ClaimAttemptBudget {
+  remaining: number;
+  limit: number;
+  windowMinutes: number;
+}
+
+/** One entry in a claim's verification trail (§30). */
+export interface ClaimAuditEvent {
+  id: number;
+  action: 'VERIFIED' | 'REDEEMED' | 'REJECTED' | 'REVOKED';
+  reason: string | null;
+  method: VerificationMethod | null;
+  at: string;
+  branch: { id: number; name: string } | null;
+  actor: { id: number; name: string } | null;
+}
+
+export interface ClaimAudit {
+  claim: MerchantClaim;
+  events: ClaimAuditEvent[];
+}

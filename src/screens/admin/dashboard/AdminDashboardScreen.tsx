@@ -17,7 +17,7 @@ const CARD_WIDTH = (Dimensions.get('window').width - 16 * 2 - 12) / 2;
 export function AdminDashboardScreen({ navigation }: Props) {
   const { colors, spacing, fontSizes, fontWeights } = useTheme();
   const { user } = useAuth();
-  const { shops, currentShop, currentShopId, setCurrentShopId } = useShopAdmin();
+  const { shops, currentShop, currentShopId, setCurrentShopId, hasPermission } = useShopAdmin();
   const entitlements = useShopEntitlements(currentShopId);
   const overview = useOverviewAnalytics({ shopId: currentShopId ?? undefined, preset: 'last30' });
   // Asks about the entitlement rather than the plan name: a Super Admin grant
@@ -108,6 +108,29 @@ export function AdminDashboardScreen({ navigation }: Props) {
             <MetricCard width={CARD_WIDTH} label="Redemptions" value={overview.data.engagement.redemptions} icon="checkmark-circle-outline" tone="success" />
             <MetricCard width={CARD_WIDTH} label="Scheduled" value={overview.data.offers.scheduled} icon="calendar-outline" />
           </View>
+        ) : null}
+
+        {/* §24. Reachable from here as well as from the Verify tab, because a
+            member of staff may hold VIEW_REDEMPTION_HISTORY without
+            VERIFY_CLAIM - a manager who reads the till log but never works
+            the counter - and for them that tab is not there to carry it. */}
+        {hasPermission('VIEW_REDEMPTION_HISTORY') ? (
+          <Pressable
+            onPress={() => navigation.navigate('Redemptions')}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: spacing.sm,
+              borderRadius: 14,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: colors.surface,
+            }}
+          >
+            <Text style={{ color: colors.text, fontWeight: fontWeights.semibold }}>Redemption History</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.textSubtle} />
+          </Pressable>
         ) : null}
 
         <Pressable
