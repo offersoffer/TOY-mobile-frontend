@@ -96,7 +96,13 @@ export function BranchListScreen({ navigation }: Props) {
 
       {canManage && atLimit ? (
         <View style={{ padding: spacing.md }}>
-          <Button label="Upgrade for more branches" variant="secondary" onPress={() => navigation.navigate('Subscription')} fullWidth />
+          {/*
+            "Upgrade for more branches" was a call to buy, which Google Play's
+            Payments policy does not allow to point anywhere but Play billing.
+            The limit is stated instead, and the plans screen is offered as
+            what it now is: a description.
+          */}
+          <Button label="See what each plan includes" variant="secondary" onPress={() => navigation.navigate('Subscription')} fullWidth />
         </View>
       ) : null}
     </Screen>

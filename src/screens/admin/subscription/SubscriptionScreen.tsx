@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, AppState, Linking, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../theme';
 import { Screen, Button, LoadingView } from '../../../components/ui';
@@ -8,7 +8,6 @@ import { useShopAdmin } from '../../../store/ShopAdminContext';
 import {
   usePlanCatalogue,
   useShopEntitlements,
-  useStartCheckout,
   useDowngrade,
   useCancelSubscription,
 } from '../../../hooks/useSubscription';
@@ -18,6 +17,27 @@ import type { AdminStackScreenProps } from '../../../navigation/types';
 import type { PlanKey, ShopEntitlements } from '../../../types/admin';
 
 type Props = AdminStackScreenProps<'Subscription'>;
+
+/**
+ * Plans, read-only.
+ *
+ * This screen used to open Razorpay's hosted checkout for the paid merchant
+ * plans. It cannot, on Android: Google Play's Payments policy requires Play
+ * billing for "cloud software and services" and "business productivity
+ * software", and has no exemption for B2B or SaaS. The exemptions it does list
+ * - physical goods, content consumable outside the app, 1:1 services, tips -
+ * do not cover a merchant subscription.
+ *
+ * The policy also forbids *leading* users to another payment method, so this
+ * screen names no destination either. It says what each plan includes, what
+ * this shop is on, and what it is using. Cancelling and moving to Free stay,
+ * because neither is a purchase and a merchant must always be able to stop
+ * paying. Switching between two paid tiers is gone with the checkout: it
+ * changes what they are billed, which is transacting.
+ *
+ * A merchant who already subscribed on the web keeps that subscription; all
+ * that is missing here is the way to start or change one.
+ */
 
 const rupees = (amount: number) => `₹${amount.toLocaleString('en-IN')}`;
 
@@ -30,7 +50,10 @@ function statusNotice(current: ShopEntitlements): { tone: 'warning' | 'danger' |
         ? `Your last payment failed. Your ${current.planName} features stay on until ${formatDate(
             current.graceUntil,
           )}, then the plan drops to Free.`
-        : 'Your last payment failed. Please retry the payment to keep your plan.',
+        // Deliberately not "retry the payment": an instruction to pay is the
+        // steering the policy forbids, and there is nowhere in the app to do
+        // it. The fact is reported; what to do about it is not.
+        : 'Your last payment failed, so this plan will drop to Free.',
     };
   }
   if (current.status === 'cancelled') {
@@ -66,60 +89,10 @@ export function SubscriptionScreen({ navigation }: Props) {
   const { currentShopId, hasPermission } = useShopAdmin();
   const catalogue = usePlanCatalogue();
   const entitlements = useShopEntitlements(currentShopId);
-  const startCheckout = useStartCheckout(currentShopId);
   const downgrade = useDowngrade(currentShopId);
   const cancel = useCancelSubscription(currentShopId);
   const [error, setError] = useState<string | null>(null);
   const canManage = hasPermission('MANAGE_SUBSCRIPTION');
-
-  // Set while the merchant is away paying on Razorpay's hosted page, so the
-  // screen knows to re-read the plan the moment they come back (§7 - only the
-  // backend decides whether the payment counted).
-  const awaitingPayment = useRef(false);
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active' && awaitingPayment.current) {
-        awaitingPayment.current = false;
-        void entitlements.refetch();
-      }
-    });
-    return () => subscription.remove();
-  }, [entitlements]);
-
-  /**
-   * Opens Razorpay's hosted checkout in the system browser (§4).
-   *
-   * The hosted page is what makes card, UPI, Google Pay and UPI AutoPay all
-   * available without the app ever handling a card number or a UPI PIN (§6).
-   */
-  const onChoosePlan = useCallback(
-    (plan: PlanKey) => {
-      if (!canManage) return;
-      setError(null);
-
-      startCheckout.mutate(
-        { plan },
-        {
-          onSuccess: async (session) => {
-            if (!session.shortUrl) {
-              setError('The payment gateway did not return a checkout link. Please try again.');
-              return;
-            }
-            const canOpen = await Linking.canOpenURL(session.shortUrl);
-            if (!canOpen) {
-              setError('Could not open the payment page on this device.');
-              return;
-            }
-            awaitingPayment.current = true;
-            await Linking.openURL(session.shortUrl);
-          },
-          onError: (err) => setError(getApiErrorMessage(err, 'Could not start checkout.')),
-        },
-      );
-    },
-    [canManage, startCheckout],
-  );
 
   const onDowngrade = useCallback(
     (plan: PlanKey, current: ShopEntitlements) => {
@@ -179,9 +152,7 @@ export function SubscriptionScreen({ navigation }: Props) {
 
   const current = entitlements.data;
   const notice = statusNotice(current);
-  const paymentsEnabled = catalogue.data?.payment?.enabled ?? false;
   const specialAccess = (current.specialAccess ?? []).filter((entry) => entry.status === 'active');
-  const currentRank = catalogue.data?.plans.find((p) => p.key === current.plan)?.rank ?? 0;
 
   const card = {
     backgroundColor: colors.surface,
@@ -310,18 +281,23 @@ export function SubscriptionScreen({ navigation }: Props) {
 
         {canManage ? (
           <View style={{ gap: spacing.sm }}>
-            <Text style={{ color: colors.text, fontWeight: fontWeights.bold }}>Available plans</Text>
+            <Text style={{ color: colors.text, fontWeight: fontWeights.bold }}>Plans</Text>
 
-            {!paymentsEnabled ? (
-              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
-                Online payments are not available on this server yet, so paid plans cannot be purchased.
-              </Text>
-            ) : null}
+            {/*
+              What each plan includes, and nothing that starts or changes one.
+              The sentence names no destination on purpose: pointing at one
+              would be the steering the policy forbids, and the merchant
+              already manages their shop elsewhere.
+            */}
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+              Plan changes are not made in the app.
+            </Text>
 
             {(catalogue.data?.plans ?? []).map((plan) => {
               const isCurrent = plan.key === current.plan;
-              const isUpgrade = plan.rank > currentRank;
-              const paid = plan.price > 0;
+              // Only a move to Free is offered. Everything above it either
+              // starts a subscription or changes what the shop is billed.
+              const isFree = plan.key === 'FREE';
 
               return (
                 <View
@@ -344,30 +320,15 @@ export function SubscriptionScreen({ navigation }: Props) {
                   </View>
                   <Text style={{ color: colors.textMuted, fontSize: fontSizes.sm }}>{plan.description}</Text>
 
-                  {paid ? (
-                    <Text style={{ color: colors.textSubtle, fontSize: fontSizes.xs }}>
-                      Card, UPI, Google Pay or UPI AutoPay — billed monthly.
-                    </Text>
-                  ) : null}
-
-                  {isCurrent ? null : isUpgrade ? (
+                  {!isCurrent && isFree ? (
                     <Button
-                      label="Continue to payment"
-                      variant="primary"
-                      disabled={!paymentsEnabled}
-                      onPress={() => onChoosePlan(plan.key)}
-                      loading={startCheckout.isPending}
-                      style={{ marginTop: spacing.xxs }}
-                    />
-                  ) : (
-                    <Button
-                      label={plan.key === 'FREE' ? 'Move to Free' : `Switch to ${plan.name}`}
+                      label="Move to Free"
                       variant="secondary"
                       onPress={() => onDowngrade(plan.key, current)}
                       loading={downgrade.isPending}
                       style={{ marginTop: spacing.xxs }}
                     />
-                  )}
+                  ) : null}
                 </View>
               );
             })}

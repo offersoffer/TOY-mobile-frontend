@@ -1,7 +1,6 @@
 import { apiClient } from './client';
 import type { ApiSuccess } from '../types';
 import type {
-  CheckoutSession,
   PaymentConfig,
   PaymentTransaction,
   PlanCatalogueResponse,
@@ -32,37 +31,19 @@ export async function getPaymentConfig(): Promise<PaymentConfig> {
 }
 
 /**
- * Starts a paid-plan purchase (§3).
+ * Starting or changing a paid plan is deliberately absent from this client.
  *
- * Returns the Razorpay subscription and its hosted checkout URL. Nothing is
- * unlocked by this call - the plan activates only when Razorpay's webhook
- * reaches the backend (§7).
+ * Google Play's Payments policy requires Play billing for "cloud software and
+ * services" and "business productivity software" and exempts neither B2B nor
+ * SaaS, so the Android app cannot open Razorpay's checkout - and the policy's
+ * anti-steering rule means it cannot point at one either. The backend
+ * endpoints still exist and the web app still uses them; only this client's
+ * ability to call them is gone, so nothing in the APK can begin a purchase.
+ *
+ * `cancel` and `downgrade` stay below: neither is a purchase, and a merchant
+ * must always be able to stop paying.
  */
-export async function startCheckout(
-  shopId: number,
-  payload: { plan: PlanKey; billingCycle?: 'monthly' | 'yearly'; note?: string },
-): Promise<CheckoutSession> {
-  const res = await apiClient.post<ApiSuccess<CheckoutSession>>(
-    `/subscriptions/shops/${shopId}/checkout`,
-    payload,
-  );
-  return res.data.data;
-}
 
-/**
- * Reports a completed checkout back to the backend, which verifies the
- * signature. Still not an activation - it only lets the UI stop waiting (§7).
- */
-export async function verifyCheckout(
-  shopId: number,
-  payload: { paymentId: string; subscriptionId?: string; orderId?: string; signature: string },
-): Promise<{ verified: boolean; subscriptionStatus: string; message: string }> {
-  const res = await apiClient.post<ApiSuccess<{ verified: boolean; subscriptionStatus: string; message: string }>>(
-    `/subscriptions/shops/${shopId}/checkout/verify`,
-    payload,
-  );
-  return res.data.data;
-}
 
 /** Moves to a cheaper plan; takes effect when the paid period ends (§12). */
 export async function downgrade(

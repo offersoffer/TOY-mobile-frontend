@@ -28,13 +28,6 @@ export function useShopEntitlements(shopId: number | null) {
  * the backend activates the plan from the webhook (§7), so callers should
  * re-read entitlements rather than assume an upgrade.
  */
-export function useStartCheckout(shopId: number | null) {
-  return useMutation({
-    mutationFn: (payload: { plan: PlanKey; billingCycle?: 'monthly' | 'yearly'; note?: string }) =>
-      subscriptionsApi.startCheckout(shopId as number, payload),
-  });
-}
-
 export function useDowngrade(shopId: number | null) {
   const queryClient = useQueryClient();
   return useMutation({

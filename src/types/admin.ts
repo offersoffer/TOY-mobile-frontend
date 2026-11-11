@@ -284,12 +284,21 @@ export interface ShopEntitlements {
 
 // ---- Payments (§3, §15, §16) -----------------------------------------------
 
-/** Everything the app needs to open Razorpay Checkout for a plan purchase. */
+/**
+ * The checkout session the backend still returns, kept for reference only:
+ * nothing in this client asks for one any more.
+ *
+ * Google Play's Payments policy requires Play billing for "cloud software and
+ * services" and exempts neither B2B nor SaaS, so the Android app cannot open
+ * Razorpay's checkout, and its anti-steering rule means it cannot point at one
+ * either. `startCheckout` was removed from `api/subscriptions.ts` so the
+ * capability is absent from the binary rather than merely unreachable.
+ */
 export interface CheckoutSession {
   gateway: 'razorpay';
   keyId: string;
   subscriptionId: string;
-  /** Razorpay's hosted checkout page - what the mobile app opens (§4). */
+  /** Razorpay's hosted checkout page. Opened by the web app, never by this one. */
   shortUrl: string | null;
   status: string;
   plan: PlanKey;
