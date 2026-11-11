@@ -71,6 +71,22 @@ export function BranchListScreen({ navigation }: Props) {
                   {item.branchName}{item.isPrimary ? '  ·  Primary' : ''}
                 </Text>
                 <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>{[item.address, item.city].filter(Boolean).join(', ')}</Text>
+                {/*
+                  §18: what is missing before an offer can go live here, so
+                  the merchant finds out on the list rather than from a 422 on
+                  a different screen. Nothing is shown for a branch that is
+                  not trading, because the gate never checks one.
+                */}
+                {item.status === 'active' && (item.publishBlockers?.length ?? 0) > 0 ? (
+                  <Text style={{ color: colors.warning, fontSize: fontSizes.xs, marginTop: spacing.xxs }}>
+                    Needs {item.publishBlockers!.map((b) => b.label).join(', ')}
+                  </Text>
+                ) : null}
+                {item.status !== 'active' ? (
+                  <Text style={{ color: colors.textSubtle, fontSize: fontSizes.xs, marginTop: spacing.xxs }}>
+                    Not trading
+                  </Text>
+                ) : null}
               </View>
               {canManage ? <Ionicons name="chevron-forward" size={18} color={colors.textSubtle} /> : null}
             </Pressable>

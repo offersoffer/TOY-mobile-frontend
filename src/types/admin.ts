@@ -69,6 +69,9 @@ export interface BranchFormValues {
   locationConfirmed?: boolean;
   openingHours?: OpeningHours | null;
   contactNumber?: string;
+  /** The person a customer asks for here. Required to publish, not to save. */
+  contactPersonName?: string;
+  contactPersonEmail?: string;
   isPrimary?: boolean;
   status?: 'active' | 'inactive';
 }
@@ -83,6 +86,12 @@ export interface ShopMember {
   userStatus: string;
   branchId: number | null;
   branchName: string | null;
+  /**
+   * Whether `branchId` confines this member or merely records where they
+   * work. Attachment has scoped redemption since long before it meant
+   * anything about permissions, so confinement is asked for explicitly.
+   */
+  branchRestricted: boolean;
   roleId: number | null;
   roleName: string | null;
   designation: string | null;
@@ -368,6 +377,25 @@ export interface OverviewAnalytics {
   offers: { total: number; active: number; scheduled: number; expired: number; draft: number; deactivated: number; expiringSoon: number };
   engagement: { views: number; clicks: number; favorites: number; claims: number; redemptions: number };
   shop?: { branches: number; members: number };
+  /**
+   * Set when the caller runs a single branch, saying which of these figures
+   * are that branch's and which are the whole shop's.
+   *
+   * The offer counts are the branch's - the offers that run there. The
+   * engagement counters are not: a shop-wide offer has one view count for the
+   * whole shop, because nothing records a feed impression per branch.
+   * Printing them as one branch's footfall would be a lie, so the server says
+   * so and the dashboard repeats it.
+   */
+  branchScope: BranchScopeNote | null;
+}
+
+export interface BranchScopeNote {
+  branches: { id: number; name: string }[];
+  /** Which of the two is the branch's own. */
+  offerSet: 'branch';
+  counters: 'shop';
+  note: string;
 }
 
 export interface AnalyticsRange {
@@ -700,8 +728,17 @@ export interface RedemptionSummary {
   pending: number;
   claimsTotal: number;
   redemptionsTotal: number;
-  /** Null, not zero, when nothing has been claimed yet - §20. */
+  /**
+   * Null, not zero, when nothing has been claimed yet - §20 - and also null
+   * for a branch admin, whose claims and redemptions are not counted the same
+   * way. A redemption happened at one branch and says so; a claim not yet
+   * redeemed happened at none, so it counts at every branch that could honour
+   * it. The server withholds the ratio rather than report one that falls as a
+   * shop opens more branches.
+   */
   claimToRedemption: number | null;
+  /** True when these counters cover one branch rather than the whole shop. */
+  branchScoped: boolean;
 }
 
 /** How many wrong codes this account may still try before §28 locks it out. */

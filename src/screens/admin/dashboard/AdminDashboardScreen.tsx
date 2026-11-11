@@ -15,7 +15,7 @@ type Props = AdminTabScreenProps<'Dashboard'>;
 const CARD_WIDTH = (Dimensions.get('window').width - 16 * 2 - 12) / 2;
 
 export function AdminDashboardScreen({ navigation }: Props) {
-  const { colors, spacing, fontSizes, fontWeights } = useTheme();
+  const { colors, spacing, fontSizes, fontWeights, radii } = useTheme();
   const { user } = useAuth();
   const { shops, currentShop, currentShopId, setCurrentShopId, hasPermission } = useShopAdmin();
   const entitlements = useShopEntitlements(currentShopId);
@@ -94,6 +94,35 @@ export function AdminDashboardScreen({ navigation }: Props) {
                 {alert.icon} {alert.message}
               </Text>
             ))}
+          </View>
+        ) : null}
+
+        {/*
+          A branch admin's dashboard is not their shop's, and the difference
+          is not uniform: the offers counted are the ones that run at their
+          branch, but a shop-wide offer's views belong to the whole shop,
+          because nothing records a feed impression per branch. Said here
+          rather than left for them to assume.
+        */}
+        {overview.data?.branchScope ? (
+          <View
+            style={{
+              padding: spacing.sm,
+              borderRadius: radii.md,
+              borderLeftWidth: 3,
+              borderLeftColor: colors.info,
+              backgroundColor: colors.infoBg,
+              gap: spacing.xxs,
+            }}
+          >
+            <Text style={{ color: colors.text, fontWeight: fontWeights.semibold, fontSize: fontSizes.sm }}>
+              {overview.data.branchScope.branches.length === 1
+                ? overview.data.branchScope.branches[0].name
+                : 'Your branch'}
+            </Text>
+            <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+              {overview.data.branchScope.note}
+            </Text>
           </View>
         ) : null}
 

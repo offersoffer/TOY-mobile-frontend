@@ -15,7 +15,7 @@ type Props = AdminStackScreenProps<'BranchForm'>;
 
 export function BranchFormScreen({ route, navigation }: Props) {
   const { branchId } = route.params ?? {};
-  const { colors, spacing, fontSizes, fontWeights } = useTheme();
+  const { colors, spacing, fontSizes, fontWeights, radii } = useTheme();
   const { currentShopId } = useShopAdmin();
   const branches = useBranches(currentShopId);
   const existing = branches.data?.find((b) => b.id === branchId);
@@ -46,6 +46,8 @@ export function BranchFormScreen({ route, navigation }: Props) {
         // saved; §8's confirmation is only owed again once the pin moves.
         locationConfirmed: existing.latitude != null,
         contactNumber: existing.contactNumber ?? undefined,
+        contactPersonName: existing.contactPersonName ?? undefined,
+        contactPersonEmail: existing.contactPersonEmail ?? undefined,
         isPrimary: existing.isPrimary,
       });
     }
@@ -82,6 +84,17 @@ export function BranchFormScreen({ route, navigation }: Props) {
       };
     });
   };
+
+  /**
+   * What the server says is still missing, read from the response rather than
+   * re-derived here: the rule lives in one place, and a copy of it on the
+   * device would be the copy that goes stale behind a store release.
+   *
+   * Only for a branch that exists and is trading - the gate never looks at an
+   * inactive one, and a branch being added has nothing to report yet.
+   */
+  const blockers =
+    existing && existing.status === 'active' ? (existing.publishBlockers ?? []) : [];
 
   /** What to seed the picker's search box with when there is no pin yet. */
   const addressHint =
@@ -148,6 +161,24 @@ export function BranchFormScreen({ route, navigation }: Props) {
           </View>
 
           {/*
+            The person a customer is put through to here, which is not
+            necessarily whoever administers the branch.
+          */}
+          <TextField
+            label="Contact Person"
+            value={form.contactPersonName ?? ''}
+            onChangeText={(v) => set('contactPersonName', v)}
+            placeholder="Who a customer asks for"
+          />
+          <TextField
+            label="Contact Person Email"
+            value={form.contactPersonEmail ?? ''}
+            onChangeText={(v) => set('contactPersonEmail', v)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+
+          {/*
             §13: branches get the same map flow as the shop itself. Offers
             attached to this branch inherit these exact coordinates for "near
             me" and distance (§12, §20), so a rough pin costs the merchant
@@ -173,6 +204,38 @@ export function BranchFormScreen({ route, navigation }: Props) {
             <Text style={{ color: colors.text, fontWeight: fontWeights.semibold }}>Primary Branch</Text>
             <Switch value={!!form.isPrimary} onValueChange={(v) => set('isPrimary', v)} trackColor={{ false: colors.border, true: colors.brand }} />
           </View>
+
+          {/*
+            §18's gate, said where it can be fixed. A warning and not a
+            validation error: the gate is on publishing, so a half-finished
+            branch still saves, and an inactive one is never checked at all -
+            which is the merchant's exit when they cannot complete one.
+          */}
+          {blockers.length > 0 ? (
+            <View
+              style={{
+                padding: spacing.sm,
+                borderRadius: radii.md,
+                borderWidth: 1,
+                borderColor: colors.warning,
+                backgroundColor: colors.warningBg,
+                gap: spacing.xxs,
+              }}
+            >
+              <Text style={{ color: colors.text, fontWeight: fontWeights.semibold, fontSize: fontSizes.sm }}>
+                Offers cannot go live at this branch yet
+              </Text>
+              {blockers.map((blocker) => (
+                <Text key={blocker.field} style={{ color: colors.text, fontSize: fontSizes.sm }}>
+                  •  {blocker.label}
+                </Text>
+              ))}
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                Fill these in, or deactivate the branch if it is not trading. Saving a
+                half-finished branch is fine.
+              </Text>
+            </View>
+          ) : null}
 
           {error ? <Text style={{ color: colors.danger, fontSize: fontSizes.sm }}>{error}</Text> : null}
 

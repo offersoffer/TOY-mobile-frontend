@@ -47,7 +47,7 @@ function emptyForm(shopId: number): OfferFormValues {
 
 export function OfferFormScreen({ route, navigation }: Props) {
   const { offerId, duplicateFrom } = route.params ?? {};
-  const { colors, spacing, fontSizes, fontWeights } = useTheme();
+  const { colors, spacing, fontSizes, fontWeights, radii } = useTheme();
   const { currentShopId } = useShopAdmin();
   const categories = useCategories();
   const branches = useBranches(currentShopId);
@@ -126,6 +126,26 @@ export function OfferFormScreen({ route, navigation }: Props) {
   const toggleBranch = (branchId: number) => {
     set('branchIds', form.branchIds.includes(branchId) ? form.branchIds.filter((b) => b !== branchId) : [...form.branchIds, branchId]);
   };
+
+  /**
+   * The branches this offer would actually appear at that are not ready, by
+   * the same rule the server applies: every active branch for a shop-wide
+   * offer, the chosen ones for a targeted offer, and none at all for an
+   * online one - an online offer has no counter to walk into.
+   *
+   * Inactive branches are left out because the gate never checks one, so
+   * listing its missing fields would send the merchant off to fix something
+   * that was never blocking them.
+   */
+  const incompleteBranches = (() => {
+    if (form.applicabilityType === 'online') return [];
+    const active = (branches.data ?? []).filter((b) => b.status === 'active');
+    const reached =
+      form.applicabilityType === 'shop_wide'
+        ? active
+        : active.filter((b) => form.branchIds.includes(b.id));
+    return reached.filter((b) => (b.publishBlockers?.length ?? 0) > 0);
+  })();
 
   const onSave = (publish: boolean) => {
     setError(null);
@@ -257,6 +277,40 @@ export function OfferFormScreen({ route, navigation }: Props) {
                 {(branches.data ?? []).map((b) => (
                   <Chip key={b.id} label={b.branchName} selected={form.branchIds.includes(b.id)} onPress={() => toggleBranch(b.id)} />
                 ))}
+              </View>
+            ) : null}
+
+            {/*
+              §18: which of the branches this offer would appear at are not
+              ready, before the merchant presses Publish rather than only in
+              the 422 that comes back from it. The server still decides -
+              this is the same list it would send - but a long form on a
+              phone is a bad place to learn the problem is on another screen.
+            */}
+            {incompleteBranches.length > 0 ? (
+              <View
+                style={{
+                  marginTop: spacing.xs,
+                  padding: spacing.sm,
+                  borderRadius: radii.md,
+                  borderWidth: 1,
+                  borderColor: colors.warning,
+                  backgroundColor: colors.warningBg,
+                  gap: spacing.xxs,
+                }}
+              >
+                <Text style={{ color: colors.text, fontWeight: fontWeights.semibold, fontSize: fontSizes.sm }}>
+                  These branches need completing before this offer can go live
+                </Text>
+                {incompleteBranches.map((branch) => (
+                  <Text key={branch.id} style={{ color: colors.text, fontSize: fontSizes.sm }}>
+                    •  {branch.branchName} — {(branch.publishBlockers ?? []).map((b) => b.label).join(', ')}
+                  </Text>
+                ))}
+                <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs }}>
+                  Open Branches and fill in the missing details, or deactivate a branch that is not
+                  trading. You can still save this offer as a draft.
+                </Text>
               </View>
             ) : null}
           </View>

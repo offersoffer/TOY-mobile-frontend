@@ -218,12 +218,38 @@ export interface ShopBranch {
   placeId: string | null;
   openingHours: OpeningHours | null;
   contactNumber: string | null;
+  /**
+   * Who a customer is put through to at this branch, published on it.
+   *
+   * Not the same person as the branch's administrator: the counter supervisor
+   * may run the screen while the manager is who you ask for. Optional to
+   * save, required to publish - see `publishBlockers`.
+   */
+  contactPersonName: string | null;
+  contactPersonEmail: string | null;
   isPrimary: boolean;
   status: 'active' | 'inactive';
   offerCount?: number;
   distanceKm: number | null;
   createdAt: string;
   updatedAt: string;
+  /**
+   * What is still missing before an offer may go live at this branch, as the
+   * server sees it. Empty for a complete one, and absent on the public branch
+   * listings, which have no business knowing.
+   */
+  publishBlockers?: BranchPublishBlocker[];
+  readyToPublish?: boolean;
+}
+
+/**
+ * One unmet requirement from the publish gate. `field` names the form control
+ * it belongs to so a screen can point at the input; `label` is what the
+ * merchant is told is missing.
+ */
+export interface BranchPublishBlocker {
+  field: string;
+  label: string;
 }
 
 /** A geocoder answer, from `/geo/search` and `/geo/reverse`. */

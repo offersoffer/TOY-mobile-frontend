@@ -235,10 +235,25 @@ export function VerifyClaimScreen({ navigation }: Props) {
         {/* Today's Activity (§35). Three counts, because the person reading
             them is also serving the customer in front of them. */}
         {summary.data ? (
-          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-            <MetricCard width="31%" label="Claimed" value={summary.data.claimsToday} icon="ticket-outline" />
-            <MetricCard width="31%" label="Redeemed" value={summary.data.redemptionsToday} icon="checkmark-circle-outline" tone="success" />
-            <MetricCard width="31%" label="Pending" value={summary.data.pending} icon="time-outline" tone="warning" />
+          <View style={{ gap: spacing.xs }}>
+            <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <MetricCard width="31%" label="Claimed" value={summary.data.claimsToday} icon="ticket-outline" />
+              <MetricCard width="31%" label="Redeemed" value={summary.data.redemptionsToday} icon="checkmark-circle-outline" tone="success" />
+              <MetricCard width="31%" label="Pending" value={summary.data.pending} icon="time-outline" tone="warning" />
+            </View>
+            {/*
+              For a branch admin these three are not measured the same way.
+              "Redeemed" happened at this counter and says so; "Claimed" is
+              every claim this counter *could* honour today, which includes
+              shop-wide ones a sibling branch may serve instead. Said out
+              loud, because reading the first as this branch's footfall is the
+              obvious mistake and nothing on screen would correct it.
+            */}
+            {summary.data.branchScoped ? (
+              <Text style={{ color: colors.textMuted, fontSize: fontSizes.xs, textAlign: 'center' }}>
+                Your branch. Claimed counts what you could honour today; Redeemed, what you did.
+              </Text>
+            ) : null}
           </View>
         ) : null}
 
