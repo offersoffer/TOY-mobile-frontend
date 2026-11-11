@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
-import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { Screen, Button, TextField } from '../../components/ui';
+import { geoApi } from '../../api';
+import { getApiErrorMessage } from '../../api/client';
 import { useLocationContext } from '../../services/location/LocationContext';
 import type { RootStackScreenProps } from '../../navigation/types';
 
@@ -36,21 +37,47 @@ export function SelectLocationScreen({ navigation }: Props) {
     navigation.goBack();
   };
 
+  /**
+   * Geocodes through our own API rather than `expo-location`.
+   *
+   * `Location.geocodeAsync` needs the foreground location permission on
+   * Android, which is exactly what the visitor on this screen has usually just
+   * declined - so the one escape route from a refused permission failed for the
+   * same reason the permission did, and said only "Could not search for that
+   * location right now." `/geo/search` needs no device permission and no
+   * account, and it is the same geocoder the merchant pickers use, which §23
+   * asks of the location model.
+   */
   const onSearch = async () => {
-    if (!query.trim()) return;
+    const text = query.trim();
+    if (!text) return;
+    // The server asks for three characters; saying so here saves a round trip
+    // and a validation error written for a form, not for this field.
+    if (text.length < 3) {
+      setError('Type at least three characters.');
+      return;
+    }
     setSearching(true);
     setError(null);
     try {
-      const results = await Location.geocodeAsync(query.trim());
+      const results = await geoApi.searchPlaces(text);
       if (results.length === 0) {
         setError('Could not find that place. Try a different city, area, or pincode.');
         return;
       }
-      const { latitude, longitude } = results[0];
-      setManualLocation({ label: query.trim(), latitude, longitude });
+      const [best] = results;
+      // The geocoder's own label is a full postal address; the chip that shows
+      // this has room for a city. What the visitor typed is the last resort.
+      setManualLocation({
+        label: best.address.city ?? best.label ?? text,
+        latitude: best.latitude,
+        longitude: best.longitude,
+      });
       navigation.goBack();
-    } catch {
-      setError('Could not search for that location right now.');
+    } catch (err) {
+      // §36 and §50 have their own wording for offline and for a timeout, and
+      // either is likelier here than a geocoder that has nothing to say.
+      setError(getApiErrorMessage(err, 'Could not search for that location right now.'));
     } finally {
       setSearching(false);
     }
